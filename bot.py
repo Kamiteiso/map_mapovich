@@ -30,8 +30,9 @@ def update_map():
     
     # Рисуем линию маршрута между городами
     if len(travel_points) > 1:
-        coords = [[p, p] for p in travel_points]
+        coords = [[p[0], p[1]] for p in travel_points]  # Исправлено!
         folium.PolyLine(coords, color="red", weight=3, opacity=0.8).add_to(mymap)
+
         
     map_html = mymap._repr_html_()
     
