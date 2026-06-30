@@ -51,24 +51,33 @@ def start(message):
 @bot.message_handler(func=lambda message: True)
 def handle_text(message):
     if message.from_user.id != MY_TELEGRAM_ID:
-        return  # Игнорируем сообщения от чужих людей
+        return
 
     try:
+        # Теперь мы делим строку по запятой, но для поиска координат
+        # берем ВСЁ, что идет до даты/описания.
         parts = message.text.split(',', 1)
-        city = parts[0].strip()
+        
+        # Точный адрес для поиска (например: "Москва, Отель Botanik Life")
+        search_query = parts[0].strip() 
+        
+        # Описание для всплывающего окошка (например: "1 июля")
         desc = parts[1].strip() if len(parts) > 1 else "Мы тут!"
         
-        # Поиск координат по названию города
-        location = geolocator.geocode(city)
+        # Передаем геолокатору полный запрос: "Город, Название отеля" или "Город, Улица, Дом"
+        location = geolocator.geocode(search_query)
+        
         if location:
             lat, lon = location.latitude, location.longitude
-            travel_points.append((lat, lon, f"<b>{city}</b><br>{desc}"))
-            bot.reply_to(message, f"📍 Нашел: {city}. Обновляю карту...")
+            # В заголовке маркера пишем точный адрес, ниже — ваше описание
+            travel_points.append((lat, lon, f"<b>{search_query}</b><br>{desc}"))
+            bot.reply_to(message, f"📍 Нашел точное место: {location.address}\nОбновляю карту...")
             update_map()
             bot.send_message(message.chat.id, "✅ Карта успешно обновлена!")
         else:
-            bot.reply_to(message, "❌ Не могу найти этот город. Напишите точнее.")
+            bot.reply_to(message, f"❌ Не могу найти точное место по запросу: '{search_query}'. Попробуйте написать адрес чуть проще.")
     except Exception as e:
         bot.reply_to(message, f"Ошибка: {str(e)}")
+
 
 bot.infinity_polling()
